@@ -1,0 +1,8 @@
+---
+- name: Install docker packages
+  become: true
+  apt:
+    pkg:
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io

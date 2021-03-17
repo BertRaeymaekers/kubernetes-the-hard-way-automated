@@ -1,0 +1,91 @@
+---
+- include_tasks: "authorized_ssh_keys.yml"
+- include_tasks: "upgrade-{{ ansible_facts['os_family'] }}.yml"
+- include_tasks: "tools-{{ ansible_facts['os_family'] }}.yml"
+- include_tasks: "tools.yml"
+
+- name: Docker config directory
+  become: yes
+  file:
+    path: /etc/docker
+    state: directory
+
+- name: Docker daemon.json config
+  become: yes
+  copy:
+    src: etc/docker/daemon.json
+    dest: /etc/docker/daemon.json
+
+- name: Get gpg key for docker sources
+  become: yes
+  get_url:
+    url: https://download.docker.com/linux/debian/gpg
+    dest: /root/docker.gpg
+  register: get_docker_gpg_key
+
+- name: Add docker gpg key to keyrings
+  when: get_docker_gpg_key.changed
+  become: yes
+  command: gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg /root/docker.gpg
+
+- name: Getting the lsb release
+  when: lsb_release is undefined
+  become: yes
+  command : lsb_release -cs
+  register: lsb_release_output
+  changed_when: false
+
+- name: Set lsb release
+  when: lsb_release is undefined
+  set_fact:
+    lsb_release: "{{ lsb_release_output.stdout }}"
+
+- name: Making sure the docker source list is there
+  become: yes
+  template:
+    src: docker.list.j2
+    dest:  /etc/apt/sources.list.d/docker.list
+
+- include_tasks: "upgrade-{{ ansible_facts['os_family'] }}.yml"
+- include_tasks: "docker-{{ ansible_facts['os_family'] }}.yml"
+
+# Generic system certificate (not sure it will be used)
+# May need subject alternative names (SAN) entries (use certificate_ALT, don't forget to also add certificate_CN)
+- set_fact:
+    cert_name: "{{ inventory_hostname }}"
+    certificate_CN: "{{ inventory_hostname }}"
+    certificate_ALT:
+      - "{{ inventory_hostname }}"
+      - "{{ kubernetes_public_address }}"
+    temp_folder: "/tmp/ca/{{ inventory_hostname }}"
+    cert_path : "/home/{{ ansible_user }}/certs"
+- include_tasks: "certificates.yml"
+
+- set_fact:
+    cert_name: "system_node_{{ inventory_hostname }}"
+    certificat_CN: "system:node:{{ inventory_hostname }}"
+    certificate_O: "system:nodes"
+- include_tasks: "certificates.yml"
+
+# Admin certificate, don't know yet why we need it
+# CN=admin
+
+# Will be used to generate client authentication configuration files 
+# CN=system:kube-proxy
+- set_fact:
+    cert_name: "system_kube-proxy"
+    certificate_CN: "system:kube-proxy"
+    certificate_O: "system:kube-proxier"
+- include_tasks: "certificates.yml"
+
+- name: kubectl config
+  template:
+    src: kubeconfig.j2
+    dest: /home/{{ ansible_user }}/{{ inventory_hostname }}.kubeconfig
+
+- name: kubectl proxy config
+  template:
+    src: kube-proxy.j2
+    dest: /home/{{ ansible_user }}/kube-proxy.kubeconfig
+
+# Admin kubeconfig (not sure we need this)

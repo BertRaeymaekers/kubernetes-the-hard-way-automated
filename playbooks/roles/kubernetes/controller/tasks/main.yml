@@ -1,0 +1,49 @@
+---
+- include_role:
+    name: kubernetes/common
+
+# Will be used to generate client authentication configuration files 
+# CN=system:kube-controller-manager
+# CN=system:kube-scheduler
+- set_fact:
+    cert_name: "system_node-controller-manager"
+    certificate_CN: "system:kube-controller-manager"
+    certificate_O: "system:kube-controller-manager"
+- include_tasks: "certificates.yml"
+
+- set_fact:
+    cert_name: "system_kube-scheduler"
+    certificate_CN: "system:kube-scheduler"
+    certificate_O: "system:kube-scheduler"
+- include_tasks: "certificates.yml"
+
+# Certificates for the controller instances:
+# CN=kubernetes, with all hostnames and IP addresses, including 127.0.0.1
+# CN=service-accounts
+- set_fact:
+    cert_name: "kubernetes"
+    certificate_CN: "kubernetes"
+    certificate_O: "kubernetes"
+- include_tasks: "certificates.yml"
+
+- set_fact:
+    cert_name: "service-accounts"
+    certificate_CN: "service-accounts"
+    certificate_O: "kubernetes"
+- include_tasks: "certificates.yml"
+
+- name: kubectl controller manager config
+  template:
+    src: kube-controller-manager.j2
+    dest: /home/{{ ansible_user }}/kube-controller-manager.kubeconfig
+
+- name: kubectl scheduler
+  template:
+    src: kube-scheduler.j2
+    dest: /home/{{ ansible_user }}/kube-scheduler.kubeconfig
+
+# kubernetes_encryption_key
+- name: kubernetes encryption key
+  template:
+    src: encryption-config.j2
+    dest: /home/{{ ansible_user }}/encryption-config.yaml

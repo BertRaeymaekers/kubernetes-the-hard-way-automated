@@ -1,0 +1,72 @@
+---
+- debug:
+    msg: "Certificate: {{ cert_path }}/{{ cert_name }}"
+
+- debug:
+    msg: "Certificate name: {{ cert_name }}"
+  delegate_to: "{{ ca_server }}"
+
+- name: Create CSR
+  include_role:
+    name: certificates/create
+  vars:
+    state: csr
+    certificate_name: "{{ cert_path }}/{{ cert_name }}"
+
+- name: Make sure the temp folder exists
+  file:
+    path: "{{ temp_folder }}"
+    state: directory
+    mode: '0700'
+
+- name: Fetch CSR
+  when: renew_certificate.changed
+  fetch:
+    src: "{{ cert_path }}/{{ cert_name }}.csr"
+    dest: "{{ temp_folder }}/"
+    flat: yes
+
+- name: Put CSR on CA server
+  when: renew_certificate.changed
+  copy:
+    src: "{{ temp_folder }}/{{ cert_name }}.csr"
+    dest: "/tmp"
+  delegate_to: "{{ ca_server }}"
+
+- name: Sign CSR
+  when: renew_certificate.changed
+  include_role:
+    name: certificates/authority
+    apply:
+      delegate_to: "{{ ca_server }}"
+  vars:
+    certificate_authority_validity_period: 10950
+    # 1 year
+    validity_period: 366
+    certificate_csr: "/tmp/{{ cert_name }}.csr"
+
+- name: Fetch CA public key
+  fetch:
+    src: "/tmp/ca.cer"
+    dest: "{{ temp_folder }}/ca.{{ certificate_authority_name }}.cer"
+    flat: yes
+  delegate_to: "{{ ca_server }}"
+
+- name: Fetch signed certificate
+  when: renew_certificate.changed
+  fetch:
+    src: "/tmp/{{ cert_name }}.cer"
+    dest: "{{ temp_folder }}/"
+    flat: yes
+  delegate_to: "{{ ca_server }}"
+  
+- name: Put CA public key on host
+  copy:
+    src: "{{ temp_folder }}/ca.{{ certificate_authority_name }}.cer"
+    dest: "{{ cert_path }}/"
+
+- name: Put signed certificate on host
+  when: renew_certificate.changed
+  copy:
+    src: "{{ temp_folder }}/{{ cert_name }}.cer"
+    dest: "{{ cert_path }}/"

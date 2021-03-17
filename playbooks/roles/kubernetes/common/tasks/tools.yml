@@ -1,0 +1,7 @@
+---
+- name: Make sure we have kubectl
+  become: yes
+  get_url:
+    url: "https://storage.googleapis.com/kubernetes-release/release/{{ kubectl_version }}/bin/linux/amd64/kubectl"
+    dest: /usr/local/bin/
+    mode: "0755"

@@ -1,0 +1,13 @@
+---
+- name: Update and upgrade apt packages
+  become: yes
+  apt:
+    upgrade: yes
+    update_cache: yes
+
+- name: Clean apt cach
+  command: apt-get clean
+  become: yes
+  changed_when: false
+  args:
+    warn: false

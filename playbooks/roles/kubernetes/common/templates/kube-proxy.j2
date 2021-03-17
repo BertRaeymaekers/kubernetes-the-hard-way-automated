@@ -1,0 +1,19 @@
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority: certs/ca.{{ certificate_authority_name }}.cer
+    server: https://{{ kubernetes_public_address }}:{{ kubernetes_public_port }}
+  name: {{ kubernetes_cluster_name }}
+contexts:
+- context:
+    cluster: {{ kubernetes_cluster_name }}
+    user: system:kube-proxy
+  name: default
+current-context: default
+kind: Config
+preferences: {}
+users:
+- name: system:kube-proxy
+  user:
+    client-certificate: certs/system_kube-proxy.cer
+    client-key: certs/system_kube-proxy.key

@@ -1,0 +1,8 @@
+---
+kubectl_version: "v1.18.6"
+
+certificate_authority_name: WolkCA
+certificate_O: Wolk
+
+kubernetes_cluster_name: clukub
+kubernetes_public_port: 6443

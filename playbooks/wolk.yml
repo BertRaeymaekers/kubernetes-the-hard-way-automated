@@ -1,0 +1,22 @@
+---
+- name: Making sure the kubernetes worker systems are setup
+  hosts: kubernetes_worker
+  tasks:
+
+    - set_fact:
+        ssh_keys:
+          - "{{ lookup('file', '{{ \"~/.ssh/id_rsa.pub\" | expanduser }}') }}"
+
+    - include_role:
+        name: kubernetes/worker
+
+- name: Making sure the kubernetes controller systems are setup
+  hosts: kubernetes_controller
+  tasks:
+
+    - set_fact:
+        ssh_keys:
+          - "{{ lookup('file', '{{ \"~/.ssh/id_rsa.pub\" | expanduser }}') }}"
+
+    - include_role:
+        name: kubernetes/worker

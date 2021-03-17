@@ -1,0 +1,19 @@
+# Don't sync work directories
+.vagrant/
+.ssh/
+.pytest_cache/
+.vscode
+
+# Don't sync retry files
+playbooks/*.retry
+
+# No vaults or inventories
+playbooks/group_vars/kubernetes.yml
+playbooks/inventory/*
+
+# No virtualenv
+venv
+venv/*
+
+# No Vagrantfile
+Vagrantfile

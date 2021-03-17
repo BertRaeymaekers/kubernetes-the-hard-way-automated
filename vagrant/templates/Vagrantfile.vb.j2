@@ -1,0 +1,36 @@
+Vagrant.configure("2") do |config|
+
+    # Virtualbox
+    config.vm.box = "debian/buster64"
+    #config.vm.box = "debian/bullseye64" # Not yet supported by docker?
+    #config.vm.box_version = "11.20210228.1"
+
+    config.vm.provision "ansible" do |ansible|
+      ansible.vault-pass = '~/tmp/kubernetes.txt'
+      ansible.groups = {
+        "kubernetes" => [
+          {% for i in count: %}"wolk{{ i }}",
+          {% endfor %}],
+        "kubernetes_worker" => [
+          {% for i in workers: %}"wolk{{ i }}",
+          {% endfor %}],
+        "kubernetes_controller" => [
+          {% for i in controllers: %}"wolk{{ i }}",
+          {% endfor %}]
+      }
+      ansible.playbook = "playbooks/wolk.yml"
+    end
+
+    {% for i in count: %}
+    # Cloud machine {{ i }}
+    config.vm.define "wolk{{ i }}" do |wolk{{ i }}|
+      wolk{{ i }}.vm.hostname = 'wolk{{ i }}'
+      wolk{{ i }}.vm.provider "virtualbox" do |vb|
+        vb.gui = false
+        vb.memory = "2048"
+      end
+      wolk{{ i }}.ssh.guest_port = "{{ 9900 + i }}"
+      wolk{{ i }}.vm.network :forwarded_port, guest: 22, host: {{ 9900 + i }}, id: "ssh"
+    end
+    {% endfor %}
+end

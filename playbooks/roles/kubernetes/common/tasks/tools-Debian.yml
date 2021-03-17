@@ -1,0 +1,10 @@
+---
+- name: Make sure apt can use ssl and we have helper utilities
+  become: true
+  apt:
+    pkg:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - gnupg
+    - lsb-release

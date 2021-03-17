@@ -1,0 +1,12 @@
+- name: "Test the use of a private certificate authority"
+  hosts: localhost
+
+  tasks: 
+    - name: Sign CSR
+      include_role:
+        name: certificates/authority
+      vars:
+        certificate_authority_name: "TestCA"
+        # This passphrase should really be in a vault
+        certificate_authority_passphrase: "myverysecretpassphrase"
+        certificate_authority_validity_period: 10950
