@@ -39,7 +39,10 @@ if __name__ == "__main__":
     current_arg = None
     for arg in sys.argv[1:]:
         if arg[0] == "-":
-            current_arg = OPTIONS.get(arg, "")
+            try:
+                args[current_arg].append(OPTION_TYPES.get(current_arg, str)(int(arg)))
+            except ValueError:
+                current_arg = OPTIONS.get(arg, "")
         else:
             args[current_arg].append(OPTION_TYPES.get(current_arg, str)(arg))
 
