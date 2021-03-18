@@ -1,0 +1,30 @@
+[Unit]
+Description=etcd
+Documentation=https://github.com/coreos
+
+[Service]
+Type=notify
+ExecStart=/usr/local/bin/etcd \
+  --name {{ inventory_hostname }} \
+  --cert-file /etc/etcd/kubernetes.cer \
+  --key-file /etc/etcd/kubernetes.key \
+  --client-cert-auth \
+  --trusted-ca-file /etc/etcd/ca.{{ certificate_authority_name }}.cer \
+  --peer-cert-file /etc/etcd/kubernetes.cer \
+  --peer-key-file /etc/etcd/kubernetes.key \
+  --peer-trusted-ca-file /etc/etcd/ca.{{ certificate_authority_name }}.cer \
+  --peer-client-cert-auth \
+  --listen-peer-urls https://0.0.0.0:2380 \
+  --initial-advertise-peer-urls https://{{ kubernetes_internal_ip }}:{{ kubernetes_etcd_peer_port }} \
+  --listen-client-urls https://0.0.0.0:2379 \
+  --advertise-client-urls https://{{ kubernetes_internal_ip }}:{{ kubernetes_etcd_client_port }} \
+  --initial-cluster-token {{ kubernetes_etcd_initial_token }} \
+  --initial-cluster {% for controller in groups["kubernetes_controller"]: %}{% if not loop.first: %},{% endif %}{{ controller }}=https://{{ hostvars[controller]["kubernetes_internal_ip"] }}:{{ hostvars[controller]["kubernetes_etcd_peer_port"] }}{% endfor %} \
+  --initial-cluster-state new \
+  --data-dir /var/lib/etcd \
+  --logger zap
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

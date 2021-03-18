@@ -1,0 +1,66 @@
+---
+
+- name: etcd config and lib directory
+  become: yes
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0700"
+  loop:
+    - /etc/etcd
+    - /var/lib/etcd
+
+- set_fact:
+    installed_etcd_version: "v0.0.0"
+
+- name: Version of the installed etcd
+  command: /usr/local/bin/etcd --version
+  register: etcd_version_output
+  failed_when: false
+  changed_when: false
+
+- set_fact:
+    installed_etcd_version: "{{ etcd_version_output.stdout_lines[0] | regex_replace('etcd version: ', 'v', ignorecase=True) }}"
+  when: etcd_version_output.rc == 0
+
+# TODO: make it better by first doing a etcd version call before downloading.
+- name: Install etcd
+  when: etcd_version_output != kubernetes_etcd_version
+  become: yes
+  unarchive:
+    src: https://github.com/etcd-io/etcd/releases/download/{{ kubernetes_etcd_version }}/etcd-{{ kubernetes_etcd_version }}-linux-amd64.tar.gz
+    dest: /tmp
+    remote_src: yes
+  notify:
+    - restart etcd
+
+- name: Copy the content
+  when: etcd_version_output != kubernetes_etcd_version
+  become: yes
+  copy:
+    src: "/tmp/etcd-{{ kubernetes_etcd_version }}-linux-amd64/{{ item }}"
+    dest: /usr/local/bin/
+    remote_src: yes
+    mode: "0755"
+    validate: "%s --help"
+  loop:
+    - etcd
+    - etcdctl
+  notify:
+    - restart etcd
+
+- name: Service etcd
+  become: yes
+  template:
+    src: etcd.service.j2
+    dest: /etc/systemd/system/etcd.service
+  notify:
+    - restart etcd
+
+- name: 
+  become: yes
+  service:
+    name: etcd
+    enabled: yes
+  notify:
+    - restart etcd

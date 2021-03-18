@@ -5,32 +5,40 @@
 # Will be used to generate client authentication configuration files 
 # CN=system:kube-controller-manager
 # CN=system:kube-scheduler
-- set_fact:
+- include_tasks: "../../common/tasks/certificates.yml"
+  vars:
     cert_name: "system_node-controller-manager"
     certificate_CN: "system:kube-controller-manager"
     certificate_O: "system:kube-controller-manager"
-- include_tasks: "certificates.yml"
 
-- set_fact:
+- include_tasks: "../../common/tasks/certificates.yml"
+  vars:
     cert_name: "system_kube-scheduler"
     certificate_CN: "system:kube-scheduler"
     certificate_O: "system:kube-scheduler"
-- include_tasks: "certificates.yml"
 
 # Certificates for the controller instances:
 # CN=kubernetes, with all hostnames and IP addresses, including 127.0.0.1
 # CN=service-accounts
-- set_fact:
+- include_tasks: "../../common/tasks/certificates.yml"
+  vars:
+    certificate_user: root
+    cert_path: /etc/etcd
     cert_name: "kubernetes"
     certificate_CN: "kubernetes"
     certificate_O: "kubernetes"
-- include_tasks: "certificates.yml"
+    certificate_ALT:
+      - "{{ inventory_hostname }}"
+      - "{{ kubernetes_internal_ip }}"
+      - "127.0.0.1"
+  notify:
+    - restart etcd
 
-- set_fact:
+- include_tasks: "../../common/tasks/certificates.yml"
+  vars:
     cert_name: "service-accounts"
     certificate_CN: "service-accounts"
     certificate_O: "kubernetes"
-- include_tasks: "certificates.yml"
 
 - name: kubectl controller manager config
   template:
@@ -47,3 +55,6 @@
   template:
     src: encryption-config.j2
     dest: /home/{{ ansible_user }}/encryption-config.yaml
+
+- name: Install etcd
+  include_tasks: etcd.yml
