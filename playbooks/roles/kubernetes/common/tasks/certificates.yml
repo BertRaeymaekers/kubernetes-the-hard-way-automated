@@ -1,6 +1,6 @@
 ---
 - debug:
-    msg: "Certificate: {{ cert_path }}/{{ cert_name }}"
+    msg: "Certificate {{ cert_path }}/{{ cert_name }}{% if certificate_user is defined: %} for user {{ certificate_user }}{% endif %}"
 
 - debug:
     msg: "Certificate name: {{ cert_name }}"
@@ -17,14 +17,17 @@
   file:
     path: "{{ temp_folder }}"
     state: directory
-    mode: '0700'
+    mode: '0777'
 
 - name: Fetch CSR
+  become: "{{ certificate_user is defined }}"
+  become_user: "{{ certificate_user | default('root') }}"
   when: renew_certificate.changed
   fetch:
     src: "{{ cert_path }}/{{ cert_name }}.csr"
     dest: "{{ temp_folder }}/"
     flat: yes
+    mode: "0777"
 
 - name: Put CSR on CA server
   when: renew_certificate.changed
@@ -50,6 +53,7 @@
     src: "/tmp/ca.cer"
     dest: "{{ temp_folder }}/ca.{{ certificate_authority_name }}.cer"
     flat: yes
+    mode: "0777"
   delegate_to: "{{ ca_server }}"
 
 - name: Fetch signed certificate
@@ -58,14 +62,19 @@
     src: "/tmp/{{ cert_name }}.cer"
     dest: "{{ temp_folder }}/"
     flat: yes
+    mode: "0777"
   delegate_to: "{{ ca_server }}"
   
 - name: Put CA public key on host
+  become: "{{ certificate_user is defined }}"
+  become_user: "{{ certificate_user | default('root') }}"
   copy:
     src: "{{ temp_folder }}/ca.{{ certificate_authority_name }}.cer"
     dest: "{{ cert_path }}/"
 
 - name: Put signed certificate on host
+  become: "{{ certificate_user is defined }}"
+  become_user: "{{ certificate_user | default('root') }}"
   when: renew_certificate.changed
   copy:
     src: "{{ temp_folder }}/{{ cert_name }}.cer"
