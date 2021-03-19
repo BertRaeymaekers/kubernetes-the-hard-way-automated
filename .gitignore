@@ -4,7 +4,8 @@
 .pytest_cache/
 .vscode
 
-# Don't sync retry files
+# Don't sync test and retry files
+playbooks/test*.yml
 playbooks/*.retry
 
 # No vaults or inventories
@@ -16,4 +17,4 @@ venv
 venv/*
 
 # No Vagrantfile
-Vagrantfile
+Vagrantfile*

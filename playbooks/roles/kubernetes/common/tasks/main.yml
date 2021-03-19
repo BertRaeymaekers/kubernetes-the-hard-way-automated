@@ -1,5 +1,6 @@
 ---
 - include_tasks: "authorized_ssh_keys.yml"
+  when: ssh_keys is defined
 - include_tasks: "upgrade-{{ ansible_facts['os_family'] }}.yml"
 - include_tasks: "tools-{{ ansible_facts['os_family'] }}.yml"
 - include_tasks: "tools.yml"

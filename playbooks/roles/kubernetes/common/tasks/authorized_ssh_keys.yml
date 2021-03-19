@@ -1,6 +1,0 @@
----
-- name: Adding public ssh keys
-  lineinfile:
-    path: "/home/{{ ansible_user }}/.ssh/authorized_keys"
-    line: "{{ item }}"
-  with_list: "{{ ssh_keys }}"

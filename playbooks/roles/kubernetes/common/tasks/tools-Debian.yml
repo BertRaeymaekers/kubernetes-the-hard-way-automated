@@ -3,7 +3,6 @@
   become: true
   apt:
     pkg:
-    - ntp
     - apt-transport-https
     - ca-certificates
     - curl

@@ -1,0 +1,20 @@
+---
+- name: Getting the VM up so we can work with it
+  hosts: all
+  tasks:
+
+    - set_fact:
+        ssh_keys:
+          - "{{ lookup('file', '{{ \"~/.ssh/id_rsa.pub\" | expanduser }}') }}"
+
+    - name: Adding ssh keys
+      lineinfile:
+        path: "/home/{{ ansible_user }}/.ssh/authorized_keys"
+        line: "{{ item }}"
+      with_list: "{{ ssh_keys }}"
+
+    - name: Make sure the time is up to date
+      become: true
+      apt:
+        pkg:
+        - ntp

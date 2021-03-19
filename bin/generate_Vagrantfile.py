@@ -12,8 +12,8 @@ OPTIONS = {
     "--from": "from",
     "-t": "to",
     "-to": "to",
-    "--controllers": "controllers",
-    "-c": "controllers",
+    "--numbers": "numbers",
+    "-n": "numbers",
 }
 
 OPTION_TYPES = {
@@ -40,12 +40,15 @@ if __name__ == "__main__":
     for arg in sys.argv[1:]:
         if arg[0] == "-":
             try:
-                args[current_arg].append(OPTION_TYPES.get(current_arg, str)(int(arg)))
+                arg_type = OPTION_TYPES.get(current_arg, str)(int(arg))
+                args[current_arg].append(arg_type)
             except ValueError:
                 current_arg = OPTIONS.get(arg, "")
         else:
             args[current_arg].append(OPTION_TYPES.get(current_arg, str)(arg))
+            current_arg = None
 
+    print(args)
     print("Called with arguments:")
     print("\t%s" % (", ".join(args.get(None, []))))
     for key, value in args.items():
@@ -56,19 +59,15 @@ if __name__ == "__main__":
 
     i_from = args.get("from", [0])[0]
     i_to = args.get("to", [i_from])[0]
+    numbers = ",".join(args.get("numbers", [])).split(",")
+    if numbers == ['']:
+        numbers = []
     template = args.get(None, ["vb"])[0]
-    count = set(range(i_from, i_to + 1))
-    controllers = set(map(int, ",".join(args.get("controllers", [])).split(",")))
-    workers = count - controllers
+    count = set(range(i_from, i_to + 1)).union(
+        set(map(int, numbers))
+    )
     print()
-    print("Controllers:", controllers)
-    print("Workers:    ", workers)
+    print("Numbers:", count)
 
     # Generate the Vagrantfile
-    do_template(
-        "Vagrantfile.%s.j2" % (template),
-        "../Vagrantfile",
-        count=count,
-        controllers=controllers,
-        workers=workers,
-    )
+    do_template("Vagrantfile.%s.j2" % (template), "../Vagrantfile", count=count)

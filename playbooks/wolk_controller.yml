@@ -5,6 +5,3 @@
 
     - include_role:
         name: kubernetes/worker
-      vars:
-        ssh_keys:
-          - "{{ lookup('file', '{{ \"~/.ssh/id_rsa.pub\" | expanduser }}') }}"
