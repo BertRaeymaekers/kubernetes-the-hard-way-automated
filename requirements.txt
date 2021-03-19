@@ -1,2 +1,6 @@
+# Used by generate_Vagrantfile.py
 jinja2
+# Ansible is used to configure the VMs
 ansible>3
+# Needed by ipaddr() in Ansible
+netaddr

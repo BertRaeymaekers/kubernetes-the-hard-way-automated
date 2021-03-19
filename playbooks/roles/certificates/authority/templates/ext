@@ -4,6 +4,9 @@ keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
 subjectAltName = @alt_names
 
 [alt_names]
-{% for alt in certificate_ALT %}
+{% for alt in certificate_ALT | difference(certificate_ALT | ipaddr('address')) %}
 DNS.{{ loop.index }} = {{ alt }}
+{% endfor %}
+{% for alt in certificate_ALT | ipaddr('address') %}
+IP.{{ loop.index }} = {{ alt }}
 {% endfor %}
