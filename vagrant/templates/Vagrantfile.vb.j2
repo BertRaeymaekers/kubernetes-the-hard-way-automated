@@ -12,7 +12,7 @@ Vagrant.configure("2") do |config|
       ansible.playbook = "playbooks/up.yml"
     end
 
-    {% for i in count: %}
+    {% for i in machine_numbers: %}
     # Cloud machine {{ i }}
     config.vm.define "wolk{{ i }}" do |wolk{{ i }}|
       wolk{{ i }}.vm.hostname = 'wolk{{ i }}'
@@ -21,10 +21,9 @@ Vagrant.configure("2") do |config|
         vb.memory = "2048"
       end
       wolk{{ i }}.ssh.guest_port = "{{ 9900 + i }}"
+      wolk{{ i }}.vm.network "private_network", ip: "{{ internal_network_a }}.{{ internal_network_b }}.{{ internal_network_c }}.{{ internal_network_d + i }}",
+        virtualbox__intnet: "{{ internal_network_name }}"
       wolk{{ i }}.vm.network :forwarded_port, guest: 22, host: {{ 9900 + i }}, id: "ssh"
-      # For kubernetes controllers
-      wolk{{ i }}.vm.network :forwarded_port, guest: 2380, host: {{ 2380 + i }}, id: "etcd_peer"
-      wolk{{ i }}.vm.network :forwarded_port, guest: 2379, host: {{ 2370 + i }}, id: "etcd_client"
     end
     {% endfor %}
 end

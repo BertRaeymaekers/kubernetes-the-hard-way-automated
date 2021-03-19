@@ -19,7 +19,7 @@ ExecStart=/usr/local/bin/etcd \
   --listen-client-urls https://0.0.0.0:2379 \
   --advertise-client-urls https://{{ kubernetes_internal_ip }}:{{ kubernetes_etcd_client_port }} \
   --initial-cluster-token {{ kubernetes_etcd_initial_token }} \
-  --initial-cluster {% for controller in groups["kubernetes_controller"]: %}{% if not loop.first: %},{% endif %}{{ controller }}=https://{{ hostvars[controller]["kubernetes_internal_ip"] }}:{{ hostvars[controller]["kubernetes_etcd_peer_port"] }}{% endfor %} \
+  --initial-cluster {% for controller in groups["kubernetes_controller"]: %}{% if not loop.first: %},{% endif %}{{ controller }}=https://{{ hostvars[controller]["kubernetes_internal_ip"] }}:{{ hostvars[controller]["kubernetes_etcd_peer_port"] | default(kubernetes_etcd_peer_port) }}{% endfor %} \
   --initial-cluster-state new \
   --data-dir /var/lib/etcd \
   --logger zap

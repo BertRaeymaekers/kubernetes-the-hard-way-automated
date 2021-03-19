@@ -21,6 +21,8 @@ OPTION_TYPES = {
     "to": int,
 }
 
+OPTION_DEFAULTS = ["vb", "kubdoc"]
+
 
 def do_template(src, dest, template_path=None, **kwargs):
     if template_path is None:
@@ -60,14 +62,23 @@ if __name__ == "__main__":
     i_from = args.get("from", [0])[0]
     i_to = args.get("to", [i_from])[0]
     numbers = ",".join(args.get("numbers", [])).split(",")
-    if numbers == ['']:
+    if numbers == [""]:
         numbers = []
-    template = args.get(None, ["vb"])[0]
-    count = set(range(i_from, i_to + 1)).union(
-        set(map(int, numbers))
-    )
+    single_args = args.get(None, [])
+    single_args = [single_args[i] if len(single_args) > i else OPTION_DEFAULTS[i] for i in range(len(OPTION_DEFAULTS))]    
+    template, internal_network_name = single_args
+    machine_numbers = set(range(i_from, i_to + 1)).union(set(map(int, numbers)))
     print()
-    print("Numbers:", count)
+    print("Numbers:", machine_numbers)
 
     # Generate the Vagrantfile
-    do_template("Vagrantfile.%s.j2" % (template), "../Vagrantfile", count=count)
+    do_template(
+        "Vagrantfile.%s.j2" % (template),
+        "../Vagrantfile",
+        machine_numbers=machine_numbers,
+        internal_network_name=internal_network_name,
+        internal_network_a=192,
+        internal_network_b=168,
+        internal_network_c=50,
+        internal_network_d=1,
+    )

@@ -4,7 +4,7 @@ certificate_authority_name: WolkCA
 kubernetes_etcd_version: v3.4.10
 kubernetes_public_port: 6443
 kubernetes_etcd_peer_port: 2380
-kubernetes_etcd_client_port: 2370
+kubernetes_etcd_client_port: 2379
 kubernetes_etcd_initial_token: kubdoc
 
 kubernetes_controllers: 
