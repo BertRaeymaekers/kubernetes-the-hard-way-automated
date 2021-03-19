@@ -66,7 +66,7 @@
 - include_tasks: "certificates.yml"
   vars:
     cert_name: "system_node_{{ inventory_hostname }}"
-    certificat_CN: "system:node:{{ inventory_hostname }}"
+    certificate_CN: "system:node:{{ inventory_hostname }}"
     certificate_O: "system:nodes"
 
 # Admin certificate, don't know yet why we need it
