@@ -2,24 +2,12 @@
 - include_role:
     name: kubernetes/common
 
-# Will be used to generate client authentication configuration files 
-# CN=system:kube-controller-manager
-# CN=system:kube-scheduler
-- include_tasks: "../../common/tasks/certificates.yml"
-  vars:
-    cert_name: "system_node-controller-manager"
-    certificate_CN: "system:kube-controller-manager"
-    certificate_O: "system:kube-controller-manager"
-
-- include_tasks: "../../common/tasks/certificates.yml"
-  vars:
-    cert_name: "system_kube-scheduler"
-    certificate_CN: "system:kube-scheduler"
-    certificate_O: "system:kube-scheduler"
-
-# Certificates for the controller instances:
-# CN=kubernetes, with all hostnames and IP addresses, including 127.0.0.1
-# CN=service-accounts
+# Kubernetes API Server Certificate
+- set_fact:
+    temp_ALT:
+      - "{{ inventory_hostname }}"
+      - "{{ kubernetes_internal_ip }}"
+      - "127.0.0.1"
 - include_tasks: "../../common/tasks/certificates.yml"
   vars:
     certificate_user: root
@@ -27,15 +15,13 @@
     cert_name: "kubernetes"
     certificate_CN: "kubernetes"
     certificate_O: "kubernetes"
-    certificate_ALT:
-      - "{{ inventory_hostname }}"
-      - "{{ kubernetes_internal_ip }}"
-      - "127.0.0.1"
+    certificate_ALT: "{{ temp_ALT + kubernetes_hostnames }}"
 - meta: noop
   changed_when: renew_certificate.changed
   notify:
     - restart etcd
 
+# Service Account Pair
 - include_tasks: "../../common/tasks/certificates.yml"
   vars:
     cert_name: "service-accounts"
