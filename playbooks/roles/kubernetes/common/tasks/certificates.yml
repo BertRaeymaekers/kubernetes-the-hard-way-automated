@@ -3,7 +3,7 @@
     msg: "Certificate {{ cert_path }}/{{ cert_name }}{% if certificate_user is defined: %} for user {{ certificate_user }}{% endif %}"
 
 - debug:
-    msg: "Certificate name: {{ cert_name }}"
+    msg: "Certificate name: {{ inventory_hostname }}-{{ cert_name }}"
   delegate_to: "{{ ca_server }}"
 
 - name: Create CSR
@@ -25,14 +25,14 @@
   when: renew_certificate.changed
   fetch:
     src: "{{ cert_path }}/{{ cert_name }}.csr"
-    dest: "{{ temp_folder }}/"
+    dest: "{{ temp_folder }}/{{ inventory_hostname }}-{{ cert_name }}.csr"
     flat: yes
     mode: "0777"
 
 - name: Put CSR on CA server
   when: renew_certificate.changed
   copy:
-    src: "{{ temp_folder }}/{{ cert_name }}.csr"
+    src: "{{ temp_folder }}/{{ inventory_hostname }}-{{ cert_name }}.csr"
     dest: "/tmp"
   delegate_to: "{{ ca_server }}"
 
@@ -46,7 +46,7 @@
     certificate_authority_validity_period: 10950
     # 1 year
     validity_period: 366
-    certificate_csr: "/tmp/{{ cert_name }}.csr"
+    certificate_csr: "/tmp/{{ inventory_hostname }}-{{ cert_name }}.csr"
 
 - name: Fetch CA public key
   fetch:
@@ -59,8 +59,8 @@
 - name: Fetch signed certificate
   when: renew_certificate.changed
   fetch:
-    src: "/tmp/{{ cert_name }}.cer"
-    dest: "{{ temp_folder }}/"
+    src: "/tmp/{{ inventory_hostname }}-{{ cert_name }}.cer"
+    dest: "{{ temp_folder }}/{{ cert_name }}.cer"
     flat: yes
     mode: "0777"
   delegate_to: "{{ ca_server }}"
