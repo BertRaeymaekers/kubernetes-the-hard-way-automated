@@ -1,0 +1,48 @@
+---
+- include_tasks: "upgrade-{{ ansible_facts['os_family'] }}.yml"
+- include_tasks: "tools-{{ ansible_facts['os_family'] }}.yml"
+
+- name: Docker config directory
+  become: yes
+  file:
+    path: /etc/docker
+    state: directory
+
+- name: Docker daemon.json config
+  become: yes
+  copy:
+    src: etc/docker/daemon.json
+    dest: /etc/docker/daemon.json
+
+- name: Get gpg key for docker sources
+  become: yes
+  get_url:
+    url: https://download.docker.com/linux/debian/gpg
+    dest: /root/docker.gpg
+  register: get_docker_gpg_key
+
+- name: Add docker gpg key to keyrings
+  when: get_docker_gpg_key.changed
+  become: yes
+  command: gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg /root/docker.gpg
+
+- name: Getting the lsb release
+  when: lsb_release is undefined
+  become: yes
+  command : lsb_release -cs
+  register: lsb_release_output
+  changed_when: false
+
+- name: Set lsb release
+  when: lsb_release is undefined
+  set_fact:
+    lsb_release: "{{ lsb_release_output.stdout }}"
+
+- name: Making sure the docker source list is there
+  become: yes
+  template:
+    src: docker.list.j2
+    dest:  /etc/apt/sources.list.d/docker.list
+
+- include_tasks: "upgrade-{{ ansible_facts['os_family'] }}.yml"
+- include_tasks: "docker-{{ ansible_facts['os_family'] }}.yml"

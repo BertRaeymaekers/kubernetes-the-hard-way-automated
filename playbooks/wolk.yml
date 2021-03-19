@@ -1,14 +1,18 @@
 ---
+- name: Making sure docker is set up
+  hosts: docker_host
+  tasks:
+    - include_role:
+        name: docker/host
+
 - name: Making sure the kubernetes worker systems are setup
   hosts: kubernetes_worker
   tasks:
-
     - include_role:
         name: kubernetes/worker
 
 - name: Making sure the kubernetes controller systems are setup
   hosts: kubernetes_controller
   tasks:
-
     - include_role:
         name: kubernetes/controller
