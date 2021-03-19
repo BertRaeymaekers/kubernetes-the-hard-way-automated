@@ -31,6 +31,8 @@
       - "{{ inventory_hostname }}"
       - "{{ kubernetes_internal_ip }}"
       - "127.0.0.1"
+- meta: noop
+  changed_when: renew_certificate.changed
   notify:
     - restart etcd
 
