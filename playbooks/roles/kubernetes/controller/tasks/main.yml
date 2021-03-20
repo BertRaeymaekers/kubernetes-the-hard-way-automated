@@ -16,7 +16,8 @@
     certificate_CN: "kubernetes"
     certificate_O: "kubernetes"
     certificate_ALT: "{{ temp_ALT + kubernetes_hostnames }}"
-- meta: noop
+- debug:
+    msg: "Certificate change: {{ renew_certificate.changed }}"
   changed_when: renew_certificate.changed
   notify:
     - restart etcd
