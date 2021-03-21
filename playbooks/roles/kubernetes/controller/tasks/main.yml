@@ -20,32 +20,19 @@
     msg: "Certificate change: {{ renew_certificate.changed }}"
   changed_when: renew_certificate.changed
   notify:
-    - restart etcd
+    - restart kubernetes cluster
 
-# Service Account Pair
+# Admin Client Certificate
 - include_tasks: "../../common/tasks/certificates.yml"
   vars:
     certificate_user: root
     cert_path: /etc/kubernetes
-    cert_name: "service-accounts"
-    certificate_CN: "service-accounts"
-    certificate_O: "kubernetes"
-
-- name: kubectl controller manager config
-  template:
-    src: kube-controller-manager.j2
-    dest: /home/{{ ansible_user }}/kube-controller-manager.kubeconfig
-
-- name: kubectl scheduler
-  template:
-    src: kube-scheduler.j2
-    dest: /home/{{ ansible_user }}/kube-scheduler.kubeconfig
-
-# kubernetes_encryption_key
-- name: kubernetes encryption key
-  template:
-    src: encryption-config.j2
-    dest: /home/{{ ansible_user }}/encryption-config.yaml
+    cert_name: "admin"
+    certificate_CN: "admin"
+    certificate_O: "system:masters"
 
 - name: Install etcd
   include_tasks: etcd.yml
+
+- name: Install Control Plane
+  include_tasks: controlplane.yml

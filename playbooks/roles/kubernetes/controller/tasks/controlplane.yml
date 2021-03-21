@@ -1,0 +1,151 @@
+---
+- name: Kubernetes config and lib directory
+  become: yes
+  file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - /etc/kubernetes/config
+    - /var/lib/kubernetes
+
+- name: Kubernetes binaries
+  include_tasks: install_from_url.yml
+  loop:
+    - "https://storage.googleapis.com/kubernetes-release/release/{{ kubernetes_version }}/bin/linux/amd64/kube-apiserver"
+    - "https://storage.googleapis.com/kubernetes-release/release/{{ kubernetes_version }}/bin/linux/amd64/kube-controller-manager"
+    - "https://storage.googleapis.com/kubernetes-release/release/{{ kubernetes_version }}/bin/linux/amd64/kube-scheduler"
+
+# Kubernetes API Server
+- include_tasks: "../../common/tasks/certificates.yml"
+  vars:
+    certificate_user: root
+    cert_path: /etc/kubernetes
+    cert_name: "service-account"
+    certificate_CN: "service-account"
+    certificate_O: "kubernetes"
+- debug:
+    msg: "Certificate change: {{ renew_certificate.changed }}"
+  changed_when: renew_certificate.changed
+  notify:
+    - restart kubernetes api server
+    - restart kubernetes controller manager
+
+- name: Service kube-apiserver
+  become: yes
+  template:
+    src: kube-apiserver.service.j2
+    dest: /etc/systemd/system/kube-apiserver.service
+  notify:
+    - restart kubernetes api server
+
+- name: Apiserver status script
+  become: yes
+  copy:
+    content: "curl --cacert /etc/kubernetes/ca.{{ certificate_authority_name }}.cer https://127.0.0.1:{{ kubernetes_public_port }}/healthz"
+    dest: /root/check-apiserver.sh
+    mode: "0700"
+
+# Kubernetes Controller Manager
+- include_tasks: "../../common/tasks/certificates.yml"
+  vars:
+    certificate_user: root
+    cert_name: "kube-controller-manager"
+    cert_path: /etc/kubernetes
+    certificate_CN: "system:kube-controller-manager"
+    certificate_O: "system:kube-controller-manager"
+- debug:
+    msg: "Certificate change: {{ renew_certificate.changed }}"
+  changed_when: renew_certificate.changed
+  notify:
+    - restart kubernetes contoller manager
+
+- name: kubernetes encryption key
+  become: yes
+  template:
+    src: encryption-config.j2
+    dest: /etc/kubernetes/encryption-config.yaml 
+  notify:
+    - restart kubernetes controller manager
+
+- name: Kubernetes Control Manager config
+  become: yes
+  template:
+    src: kube-controller-manager.kubeconfig.j2
+    dest: /etc/kubernetes/kube-controller-manager.kubeconfig
+  notify:
+    - restart kubernetes controller manager
+
+- name: Service kube-controller-manager
+  become: yes
+  template:
+    src: kube-controller-manager.service.j2
+    dest: /etc/systemd/system/kube-controller-manager.service
+  notify:
+    - restart kubernetes controller manager
+
+# Kubernetes Scheduler
+- include_tasks: "../../common/tasks/certificates.yml"
+  vars:
+    certificate_user: root
+    cert_name: "kube-scheduler"
+    cert_path: /etc/kubernetes
+    certificate_CN: "system:kube-scheduler"
+    certificate_O: "system:kube-scheduler"
+- debug:
+    msg: "Certificate change: {{ renew_certificate.changed }}"
+  changed_when: renew_certificate.changed
+  notify:
+    - restart kubernetes scheduler
+
+- name: Kubernetes Scheduler config
+  become: yes
+  template:
+    src: kube-scheduler.kubeconfig.j2
+    dest: /etc/kubernetes/kube-scheduler.kubeconfig
+  notify:
+    - restart kubernetes scheduler
+
+- name: Kuernetes Scheduler yaml
+  become: yes
+  template:
+    src: kube-scheduler.yaml.j2
+    dest: /etc/kubernetes/kube-scheduler.yaml
+  notify:
+    - restart kubernetes scheduler
+
+- name: Kubernetes Scheduler service
+  become: yes
+  template:
+    src: kube-scheduler.service.j2
+    dest: /etc/systemd/system/kube-scheduler.service
+  notify:
+    - restart kubernetes scheduler
+
+# Health checks via the website
+- include_tasks: "nginx-Debian.yml"
+
+- name: Nginx certificate path
+  become: yes
+  file:
+    path: /etc/nginx/ssl
+    state: directory
+    mode: "0700"
+
+- include_tasks: "../../common/tasks/certificates.yml"
+  vars:
+    certificate_user: root
+    cert_name: "nginx"
+    cert_path: /etc/nginx/ssl
+    certificate_CN: "{{ inventory_hostname }}"
+    certificate_ALT: "{{ [[inventory_hostname, kubernetes_internal_ip, kubernetes_public_address], kubernetes_public_ip | default([])] | flatten }}"
+- debug:
+    msg: "Certificate change: {{ renew_certificate.changed }}"
+  changed_when: renew_certificate.changed
+  notify:
+    - restart nginx
+
+- name: Nginx config for kubernetes
+  become: yes
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/conf.d/kubernetes.conf

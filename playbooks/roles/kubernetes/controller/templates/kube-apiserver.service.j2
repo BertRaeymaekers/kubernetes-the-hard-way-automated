@@ -1,0 +1,40 @@
+[Unit]
+Description=Kubernetes API Server
+Documentation=https://github.com/kubernetes/kubernetes
+
+[Service]
+ExecStart=/usr/local/bin/kube-apiserver \
+  --advertise-address {{ kubernetes_internal_ip }} \
+  --secure-port {{ kubernetes_local_port }} \
+  --allow-privileged true \
+  --apiserver-count 3 \
+  --audit-log-maxage 30 \
+  --audit-log-maxbackup 3 \
+  --audit-log-maxsize 100 \
+  --audit-log-path /var/log/audit.log \
+  --authorization-mode Node,RBAC \
+  --bind-address 0.0.0.0 \
+  --client-ca-file /etc/kubernetes/ca.{{ certificate_authority_name }}.cer \
+  --enable-admission-plugins NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota \
+  --etcd-cafile /etc/kubernetes/ca.{{ certificate_authority_name }}.cer \
+  --etcd-certfile /etc/kubernetes/kubernetes.cer \
+  --etcd-keyfile /etc/kubernetes/kubernetes.key \
+  --etcd-servers {% for controller in groups["kubernetes_controller"]: %}{% if not loop.first: %},{% endif %}https://{{ hostvars[controller]["kubernetes_internal_ip"] }}:{{ hostvars[controller]["kubernetes_etcd_client_port"] | default(kubernetes_etcd_client_port) }}{% endfor %} \
+  --event-ttl 1h \
+  --encryption-provider-config /etc/kubernetes/encryption-config.yaml \
+  --kubelet-certificate-authority /etc/kubernetes/ca.{{ certificate_authority_name }}.cer \
+  --kubelet-client-certificate /etc/kubernetes/kubernetes.cer \
+  --kubelet-client-key /etc/kubernetes/kubernetes.key \
+  --kubelet-https true \
+  --runtime-config 'api/all=true' \
+  --service-account-key-file /etc/kubernetes/service-account.cer \
+  --service-cluster-ip-range {{ kubernetes_cluster_ip_range }} \
+  --service-node-port-range {{ kubernetes_service_node_port_range }} \
+  --tls-cert-file /etc/kubernetes/kubernetes.cer \
+  --tls-private-key-file /etc/kubernetes/kubernetes.key \
+  --v 2
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

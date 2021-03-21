@@ -1,0 +1,15 @@
+---
+- name: Check version
+  become: yes
+  command: "{{ item | basename }} --version"
+  register: version_output
+  changed_when: false
+  failed_when: false
+
+- name: Download kubernetes binaries
+  become: yes
+  when: version_output.rc == 2 or (version_output.stdout != "Kubernetes " + kubernetes_version)
+  get_url: 
+    url: "{{ item }}"
+    dest: /usr/local/bin/
+    mode: "0755"

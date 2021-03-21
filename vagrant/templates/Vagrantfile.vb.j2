@@ -24,6 +24,7 @@ Vagrant.configure("2") do |config|
       wolk{{ i }}.vm.network "private_network", ip: "{{ internal_network_a }}.{{ internal_network_b }}.{{ internal_network_c }}.{{ internal_network_d + i }}",
         virtualbox__intnet: "{{ internal_network_name }}"
       wolk{{ i }}.vm.network :forwarded_port, guest: 22, host: {{ 9900 + i }}, id: "ssh"
+      wolk{{ i }}.vm.network :forwarded_port, guest: 443, host: {{ 9443 + i }}, id: "https"
     end
     {% endfor %}
 end

@@ -5,13 +5,6 @@
     temp_folder: "/tmp/ca/{{ inventory_hostname }}"
     cert_path : "/home/{{ ansible_user }}/certs"
 
-# Admin Client Certificate
-- include_tasks: "certificates.yml"
-  vars:
-    cert_name: "admin"
-    certificate_CN: "admin"
-    certificate_O: "system:mastes"
-
 # Kubectl Client Certificate
 - include_tasks: "certificates.yml"
   vars:
@@ -23,35 +16,15 @@
       - "{{ kubernetes_public_address }}"
       - "{{ kubernetes_internal_ip }}"
 
-# Controller Manager Client Certificate
-- include_tasks: "certificates.yml"
-  vars:
-    cert_name: "kube-controller-manager"
-    certificate_CN: "system:kube-controller-manager"
-    certificate_O: "system:kube-controller-manager"
-
+# TODO: move to controller
 # Kube Proxy Client Certificate
-- include_tasks: "certificates.yml"
-  vars:
-    cert_name: "kube-proxy"
-    certificate_CN: "system:kube-proxy"
-    certificate_O: "system:kube-proxier"
-
-# Scheduler Client Certificate
-- include_tasks: "certificates.yml"
-  vars:
-    cert_name: "kube-scheduler"
-    certificate_CN: "system:kube-scheduler"
-    certificate_O: "system:kube-scheduler"
-
-- name: kubectl config
-  template:
-    src: kubeconfig.j2
-    dest: /home/{{ ansible_user }}/{{ inventory_hostname }}.kubeconfig
-
-- name: kubectl proxy config
-  template:
-    src: kube-proxy.j2
-    dest: /home/{{ ansible_user }}/kube-proxy.kubeconfig
-
-# Admin kubeconfig (not sure we need this)
+#- include_tasks: "certificates.yml"
+#  vars:
+#    cert_name: "kube-proxy"
+#    certificate_CN: "system:kube-proxy"
+#    certificate_O: "system:kube-proxier"
+#
+#- name: kubectl proxy config
+#  template:
+#    src: kube-proxy.j2
+#    dest: /home/{{ ansible_user }}/kube-proxy.kubeconfig

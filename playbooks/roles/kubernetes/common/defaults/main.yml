@@ -6,3 +6,4 @@ certificate_O: Wolk
 
 kubernetes_cluster_name: clukub
 kubernetes_public_port: 6443
+kubernetes_local_port: "{{ kubernetes_public_port }}"

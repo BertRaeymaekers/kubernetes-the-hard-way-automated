@@ -31,10 +31,12 @@ Have it contain the following paramters:
   (i.e. have my laptop be the CA server)
 - [`certificate_authority_CN`]: The common name (CN) for the CA. Defaults to certificate_authority_name.
 - [`certificate_authority_O`]: The organization (0) for the CA. Defaults to 'FOOBAR'.
-- `kubernetes_public_address`: The public addres of your kubenetes cluster
-- [`kubernetes_cluster_name`]: The kubernetes cluster name. Defaults to 'kubernetes'.
+- `kubernetes_public_address`: The public addres of your kubenetes cluster.
+- [`kubernetes_public_ip`]: The public IP address of tyour kubernets cluster.
+- `kubernetes_cluster_ip_range`: The kubernetes cluster ip range (e.g. 192.168.50.0/24)
 - `kubernetes_encryption_key`: A base64 encoded encryption key. Generate it with `head -c 32 /dev/urandom | base64`.
-
+- [`kubernetes_cluster_name`]: The kubernetes cluster name. Defaults to 'kubernetes'.
+ 
 Step 1
 ------
 

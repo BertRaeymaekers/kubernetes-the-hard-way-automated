@@ -1,0 +1,6 @@
+---
+- name: Nginx
+  become: true
+  apt:
+    pkg:
+    - nginx

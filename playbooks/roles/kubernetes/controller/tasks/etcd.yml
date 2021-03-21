@@ -24,9 +24,8 @@
     installed_etcd_version: "{{ etcd_version_output.stdout_lines[0] | regex_replace('etcd version: ', 'v', ignorecase=True) }}"
   when: etcd_version_output.rc == 0
 
-# TODO: make it better by first doing a etcd version call before downloading.
 - name: Install etcd
-  when: etcd_version_output != kubernetes_etcd_version
+  when: installed_etcd_version != kubernetes_etcd_version
   become: yes
   unarchive:
     src: https://github.com/etcd-io/etcd/releases/download/{{ kubernetes_etcd_version }}/etcd-{{ kubernetes_etcd_version }}-linux-amd64.tar.gz
@@ -65,3 +64,10 @@
     enabled: yes
   notify:
     - restart etcd
+
+- name: Etcd status script
+  become: yes
+  copy:
+    content: "etcdctl member list --endpoints=https://127.0.0.1:{{ kubernetes_etcd_client_port }} --cacert=/etc/kubernetes/ca.{{ certificate_authority_name }}.cer --cert=/etc/kubernetes/kubernetes.cer --key=/etc/kubernetes/kubernetes.key"
+    dest: /root/check-etcd.sh
+    mode: "0700"

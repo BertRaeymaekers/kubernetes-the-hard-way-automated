@@ -24,7 +24,7 @@
 - name: Add docker gpg key to keyrings
   when: get_docker_gpg_key.changed
   become: yes
-  command: gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg /root/docker.gpg
+  command: gpg --yes --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg /root/docker.gpg
 
 - name: Getting the lsb release
   when: lsb_release is undefined
