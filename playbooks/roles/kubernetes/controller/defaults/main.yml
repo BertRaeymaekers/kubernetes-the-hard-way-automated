@@ -7,9 +7,5 @@ kubernetes_etcd_version: v3.4.10
 kubernetes_public_port: 6443
 kubernetes_etcd_peer_port: 2380
 kubernetes_etcd_client_port: 2379
+kubernetes_service_node_port_range: 30000-32767
 kubernetes_etcd_initial_token: kubdoc
-
-kubernetes_controllers: 
-  - "wolk1=https://10.240.0.10:2381"
-  - "wolk2=https://10.240.0.11:2382"
-  - "wolk3=https://10.240.0.12:2383"
