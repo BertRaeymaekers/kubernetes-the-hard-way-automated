@@ -3,5 +3,6 @@
   become: yes
   service:
     name: etcd
+    daemon_reload: yes
     state: restarted
   listen: "restart kubernetes services"
