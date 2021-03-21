@@ -5,7 +5,7 @@
     upgrade: yes
     update_cache: yes
 
-- name: Clean apt cach
+- name: Clean apt cache
   command: apt-get clean
   become: yes
   changed_when: false
