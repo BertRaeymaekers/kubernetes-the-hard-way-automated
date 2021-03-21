@@ -11,7 +11,7 @@
 - include_tasks: "../../common/tasks/certificates.yml"
   vars:
     certificate_user: root
-    cert_path: /etc/etcd
+    cert_path: /etc/kubernetes
     cert_name: "kubernetes"
     certificate_CN: "kubernetes"
     certificate_O: "kubernetes"
@@ -25,6 +25,8 @@
 # Service Account Pair
 - include_tasks: "../../common/tasks/certificates.yml"
   vars:
+    certificate_user: root
+    cert_path: /etc/kubernetes
     cert_name: "service-accounts"
     certificate_CN: "service-accounts"
     certificate_O: "kubernetes"
