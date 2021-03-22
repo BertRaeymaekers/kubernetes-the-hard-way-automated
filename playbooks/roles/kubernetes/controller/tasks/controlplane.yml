@@ -41,7 +41,7 @@
 - name: Apiserver status script
   become: yes
   copy:
-    content: "curl --cacert /etc/kubernetes/ca.{{ certificate_authority_name }}.cer https://127.0.0.1:{{ kubernetes_public_port }}/healthz"
+    content: "curl --cacert /etc/kubernetes/ca.{{ certificate_authority_name }}.cer https://127.0.0.1:{{ kubernetes_public_port }}/healthz; echo ''"
     dest: /root/check-apiserver.sh
     mode: "0700"
 

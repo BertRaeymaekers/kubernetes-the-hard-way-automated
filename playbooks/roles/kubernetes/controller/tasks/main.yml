@@ -31,8 +31,21 @@
     certificate_CN: "admin"
     certificate_O: "system:masters"
 
+- name: Kubernetes Admin config
+  become: yes
+  template:
+    src: admin.kubeconfig.j2
+    dest: /etc/kubernetes/admin.kubeconfig
+
 - name: Install etcd
   include_tasks: etcd.yml
 
 - name: Install Control Plane
   include_tasks: controlplane.yml
+
+- name: Kubernetes components status script
+  become: yes
+  copy:
+    content: "kubectl get componentstatuses --kubeconfig /etc/kubernetes/admin.kubeconfig"
+    dest: /root/check-components.sh
+    mode: "0700"
